@@ -1,6 +1,6 @@
 // src/components/MyCoupons.jsx
 import React, { useState, useEffect } from 'react';
-import { Gift, QrCode, Calendar, DollarSign, Copy } from 'lucide-react';
+import { Gift, QrCode, Calendar, DollarSign, Copy, TrendingUp, Package } from 'lucide-react';
 import axios from 'axios';
 
 const MyCoupons = () => {
@@ -14,7 +14,7 @@ const MyCoupons = () => {
 
   const fetchCoupons = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/coupons/my-coupons');
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/coupons/my-coupons`);
       setCoupons(response.data);
       setLoading(false);
     } catch (error) {
@@ -25,7 +25,7 @@ const MyCoupons = () => {
 
   const handleRedeem = async (couponId) => {
     try {
-      await axios.post(`http://localhost:3000/api/coupons/${couponId}/redeem`);
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/coupons/${couponId}/redeem`);
       fetchCoupons(); // Refresh the list
       alert('Coupon redeemed successfully!');
     } catch (error) {
@@ -56,174 +56,182 @@ const MyCoupons = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50/60">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your coupons...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50/60 pb-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-6 pt-8 pb-6 rounded-b-3xl shadow-lg">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">My Coupons</h1>
-            <p className="text-gray-600">Redeem your reward coupons at partner businesses</p>
+            <h1 className="text-2xl font-bold text-white mb-1">My Coupons</h1>
+            <p className="text-amber-100 text-sm">Redeem your reward coupons</p>
           </div>
-          <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-            <Gift className="text-yellow-600" size={24} />
+          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/30">
+            <Gift className="text-white" size={24} />
           </div>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Active Coupons</p>
-              <p className="text-3xl font-bold text-yellow-600 mt-2">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/30">
+            <div className="text-center">
+              <p className="text-amber-100 text-xs font-medium">Active</p>
+              <p className="text-white text-lg font-bold mt-1">
                 {coupons.filter(c => c.status === 'active').length}
               </p>
             </div>
-            <Gift className="text-yellow-400" size={24} />
           </div>
-        </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Total Value</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">
+          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/30">
+            <div className="text-center">
+              <p className="text-amber-100 text-xs font-medium">Total Value</p>
+              <p className="text-white text-lg font-bold mt-1">
                 ${coupons.reduce((sum, coupon) => sum + (coupon.value || 0), 0)}
               </p>
             </div>
-            <DollarSign className="text-green-400" size={24} />
           </div>
-        </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Waste Contributed</p>
-              <p className="text-3xl font-bold text-blue-600 mt-2">
+          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/30">
+            <div className="text-center">
+              <p className="text-amber-100 text-xs font-medium">Waste</p>
+              <p className="text-white text-lg font-bold mt-1">
                 {coupons.reduce((sum, coupon) => sum + (coupon.waste_weight_earned || 0), 0)}kg
               </p>
             </div>
-            <Gift className="text-blue-400" size={24} />
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+      <div className="px-4 -mt-4 mb-4">
+        <div className="bg-white rounded-2xl shadow-lg p-1 border border-gray-100">
+          <div className="flex">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
+                    : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                {tab.label}
-                <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs">
-                  {tab.count}
-                </span>
+                <div className="flex items-center justify-center space-x-2">
+                  <span>{tab.label}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </div>
               </button>
             ))}
-          </nav>
+          </div>
         </div>
+      </div>
 
-        {/* Coupons List */}
-        <div className="mt-6">
-          {filteredCoupons.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCoupons.map((coupon) => (
-                <div
-                  key={coupon.coupon_id}
-                  className={`border rounded-2xl p-6 ${
+      {/* Coupons List */}
+      <div className="px-4">
+        {filteredCoupons.length > 0 ? (
+          <div className="space-y-3">
+            {filteredCoupons.map((coupon) => (
+              <div
+                key={coupon.coupon_id}
+                className={`bg-white rounded-2xl shadow-lg p-5 border-2 transition-all duration-300 active:scale-95 ${
+                  coupon.status === 'active'
+                    ? 'border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50'
+                    : coupon.status === 'redeemed'
+                    ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50'
+                    : 'border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100'
+                }`}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${
                     coupon.status === 'active'
-                      ? 'border-green-200 bg-green-50'
+                      ? 'bg-amber-100 text-amber-800'
                       : coupon.status === 'redeemed'
-                      ? 'border-blue-200 bg-blue-50'
-                      : 'border-gray-200 bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      coupon.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : coupon.status === 'redeemed'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {coupon.status.charAt(0).toUpperCase() + coupon.status.slice(1)}
-                    </span>
-                    <div className="text-2xl font-bold text-yellow-600">
-                      ${coupon.value}
-                    </div>
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {coupon.status.charAt(0).toUpperCase() + coupon.status.slice(1)}
+                  </span>
+                  <div className="text-2xl font-bold text-amber-600">
+                    ${coupon.value}
                   </div>
+                </div>
 
-                  <div className="text-center mb-4">
-                    <div className="bg-white rounded-lg p-4 border-2 border-dashed border-gray-300 mb-3">
-                      <QrCode size={48} className="mx-auto text-gray-400" />
-                    </div>
-                    <p className="font-mono text-lg font-bold text-gray-800">
+                {/* QR Code & Code */}
+                <div className="text-center mb-4">
+                  <div className="bg-white rounded-xl p-4 border-2 border-dashed border-gray-300 mb-3 shadow-inner">
+                    <QrCode size={40} className="mx-auto text-gray-400" />
+                  </div>
+                  <div className="flex items-center justify-center space-x-2">
+                    <p className="font-mono text-base font-bold text-gray-800 bg-white/80 px-3 py-2 rounded-lg border">
                       {coupon.coupon_code}
                     </p>
                     <button
                       onClick={() => copyToClipboard(coupon.coupon_code)}
-                      className="text-green-600 hover:text-green-700 text-sm flex items-center justify-center mx-auto mt-1"
+                      className="w-10 h-10 bg-amber-500 text-white rounded-lg flex items-center justify-center active:scale-95 transition-transform"
                     >
-                      <Copy size={14} className="mr-1" />
-                      Copy Code
+                      <Copy size={16} />
                     </button>
                   </div>
-
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Gift size={14} className="mr-2" />
-                      Earned from: {coupon.waste_weight_earned}kg waste
-                    </div>
-                    <div className="flex items-center">
-                      <Calendar size={14} className="mr-2" />
-                      Expires: {new Date(coupon.expiry_date).toLocaleDateString()}
-                    </div>
-                  </div>
-
-                  {coupon.status === 'active' && (
-                    <button
-                      onClick={() => handleRedeem(coupon.coupon_id)}
-                      className="w-full mt-4 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
-                    >
-                      Redeem Now
-                    </button>
-                  )}
-
-                  {coupon.status === 'redeemed' && coupon.redeemed_at && (
-                    <div className="mt-4 text-sm text-blue-600">
-                      Redeemed on: {new Date(coupon.redeemed_at).toLocaleDateString()}
-                    </div>
-                  )}
                 </div>
-              ))}
+
+                {/* Details */}
+                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center">
+                    <Package size={14} className="mr-2 text-amber-500" />
+                    <span>Earned from: <strong>{coupon.waste_weight_earned}kg</strong> waste</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar size={14} className="mr-2 text-amber-500" />
+                    <span>Expires: <strong>{new Date(coupon.expiry_date).toLocaleDateString()}</strong></span>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                {coupon.status === 'active' && (
+                  <button
+                    onClick={() => handleRedeem(coupon.coupon_id)}
+                    className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 px-4 rounded-xl hover:shadow-lg transition-all duration-300 active:scale-95 font-medium text-sm shadow-lg shadow-amber-200"
+                  >
+                    Redeem Now
+                  </button>
+                )}
+
+                {coupon.status === 'redeemed' && coupon.redeemed_at && (
+                  <div className="text-center py-2">
+                    <div className="text-emerald-600 text-sm font-medium">
+                      ✓ Redeemed on {new Date(coupon.redeemed_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-3xl shadow-lg p-8 text-center border border-gray-100">
+            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Gift size={32} className="text-gray-400" />
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <Gift size={64} className="mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No coupons found</h3>
-              <p className="text-gray-500">
-                {activeTab === 'active'
-                  ? "You don't have any active coupons. Contribute more waste to earn rewards!"
-                  : `No ${activeTab} coupons found.`}
-              </p>
-            </div>
-          )}
-        </div>
+            <h3 className="text-lg font-medium text-gray-800 mb-2">No coupons found</h3>
+            <p className="text-gray-500 text-sm">
+              {activeTab === 'active'
+                ? "You don't have any active coupons. Contribute more waste to earn rewards!"
+                : `No ${activeTab} coupons found.`}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

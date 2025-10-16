@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Navigation, Clock, Truck, Search, Crosshair } from 'lucide-react';
+import { MapPin, Navigation, Clock, Truck, Search, Crosshair, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyCMMHWV8VSCEoqws7_Rh2Crea_rSPvv1t0";
 
@@ -8,6 +9,7 @@ const TrackVehicle = () => {
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
   const userMarkerRef = useRef(null);
+  const navigate = useNavigate();
 
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -96,9 +98,9 @@ const TrackVehicle = () => {
       icon: {
         url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
           <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-            <circle cx="20" cy="20" r="18" fill="#4285F4" stroke="white" stroke-width="3"/>
+            <circle cx="20" cy="20" r="18" fill="#10b981" stroke="white" stroke-width="3"/>
             <circle cx="20" cy="20" r="8" fill="white"/>
-            <circle cx="20" cy="20" r="4" fill="#4285F4"/>
+            <circle cx="20" cy="20" r="4" fill="#10b981"/>
           </svg>
         `),
         scaledSize: new window.google.maps.Size(40, 40),
@@ -130,10 +132,10 @@ const TrackVehicle = () => {
 
     // Add user location circle
     new window.google.maps.Circle({
-      strokeColor: "#4285F4",
+      strokeColor: "#10b981",
       strokeOpacity: 0.4,
       strokeWeight: 2,
-      fillColor: "#4285F4",
+      fillColor: "#10b981",
       fillOpacity: 0.1,
       map: mapInstanceRef.current,
       center: center,
@@ -267,33 +269,7 @@ const TrackVehicle = () => {
         return;
       }
 
-      // Mock data for demo - replace with your actual API call
-      const mockVehicles = [
-        {
-          vehicle_id: 1,
-          vehicle_number: "WC-001",
-          status: "active",
-          current_location_lat: parseFloat(location.lat) + 0.05,
-          current_location_lng: parseFloat(location.lng) + 0.05,
-          vehicle_type: "Garbage Truck",
-          last_location_update: new Date().toISOString()
-        },
-        {
-          vehicle_id: 2,
-          vehicle_number: "WC-002",
-          status: "active",
-          current_location_lat: parseFloat(location.lat) - 0.03,
-          current_location_lng: parseFloat(location.lng) + 0.02,
-          vehicle_type: "Recycling Truck",
-          last_location_update: new Date().toISOString()
-        }
-      ];
-
-      setVehicles(mockVehicles);
-      
-      // Uncomment below for actual API call
-      
-      const response = await fetch(`http://localhost:3000/api/vehicles/nearby?latitude=${location.lat}&longitude=${location.lng}&maxDistance=50`);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/vehicles/nearby?latitude=${location.lat}&longitude=${location.lng}&maxDistance=50`);
       const data = await response.json();
       setVehicles(Array.isArray(data) ? data : [data]);
       
@@ -340,220 +316,237 @@ const TrackVehicle = () => {
 
   if (loading && vehicles.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      <div className="min-h-screen bg-gray-50/60 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading vehicles...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-4">
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Track Collection Vehicle</h1>
-        <p className="text-gray-600">Live location of waste collection vehicles near you</p>
-      </div>
-
-      {/* Location Selection */}
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Search Location</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <input
-                type="radio"
-                id="currentLocation"
-                checked={useCurrentLocation}
-                onChange={() => setUseCurrentLocation(true)}
-                className="text-green-500 focus:ring-green-500"
-              />
-              <label htmlFor="currentLocation" className="font-medium text-gray-700">
-                Use My Current Location
-              </label>
-            </div>
-            
-            {useCurrentLocation && userLocation && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center space-x-2 text-green-700">
-                  <Crosshair size={16} />
-                  <span className="text-sm">
-                    Current Location: {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={getCurrentLocation}
-              disabled={loading}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center"
-            >
-              <Crosshair size={16} className="mr-2" />
-              {loading ? 'Getting Location...' : 'Refresh Location'}
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <input
-                type="radio"
-                id="manualLocation"
-                checked={!useCurrentLocation}
-                onChange={() => setUseCurrentLocation(false)}
-                className="text-blue-500 focus:ring-blue-500"
-              />
-              <label htmlFor="manualLocation" className="font-medium text-gray-700">
-                Enter Coordinates Manually
-              </label>
-            </div>
-
-            {!useCurrentLocation && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Latitude
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={searchLocation.lat}
-                      onChange={(e) => setSearchLocation({...searchLocation, lat: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., 6.9271"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Longitude
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={searchLocation.lng}
-                      onChange={(e) => setSearchLocation({...searchLocation, lng: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., 79.8612"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={handleSearch}
-                  disabled={!searchLocation.lat || !searchLocation.lng}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center"
-                >
-                  <Search size={16} className="mr-2" />
-                  Search Vehicles
-                </button>
-              </div>
-            )}
+    <div className="min-h-screen bg-gray-50/60 pb-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 pt-8 pb-6 rounded-b-3xl shadow-lg">
+        <div className="flex items-center mb-6">
+          <button 
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mr-3 backdrop-blur-sm border border-white/30"
+          >
+            <ArrowLeft className="text-white" size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Track Vehicle</h1>
+            <p className="text-emerald-100 text-sm">Live location of waste collection vehicles</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="px-4 -mt-4 space-y-4">
+        {/* Location Selection */}
+        <div className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Search Location</h2>
+          
+          <div className="space-y-4">
+            {/* Current Location Option */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  id="currentLocation"
+                  checked={useCurrentLocation}
+                  onChange={() => setUseCurrentLocation(true)}
+                  className="text-emerald-500 focus:ring-emerald-500"
+                />
+                <label htmlFor="currentLocation" className="font-medium text-gray-700 text-sm">
+                  Use My Current Location
+                </label>
+              </div>
+              
+              {useCurrentLocation && userLocation && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                  <div className="flex items-center space-x-2 text-emerald-700">
+                    <Crosshair size={16} />
+                    <span className="text-sm">
+                      Current Location: {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={getCurrentLocation}
+                disabled={loading}
+                className="w-full bg-emerald-500 text-white py-3 px-4 rounded-2xl hover:bg-emerald-600 transition-colors disabled:opacity-50 flex items-center justify-center active:scale-95 font-medium text-sm"
+              >
+                <Crosshair size={18} className="mr-2" />
+                {loading ? 'Getting Location...' : 'Refresh Location'}
+              </button>
+            </div>
+
+            {/* Manual Location Option */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  id="manualLocation"
+                  checked={!useCurrentLocation}
+                  onChange={() => setUseCurrentLocation(false)}
+                  className="text-blue-500 focus:ring-blue-500"
+                />
+                <label htmlFor="manualLocation" className="font-medium text-gray-700 text-sm">
+                  Enter Coordinates Manually
+                </label>
+              </div>
+
+              {!useCurrentLocation && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Latitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={searchLocation.lat}
+                        onChange={(e) => setSearchLocation({...searchLocation, lat: e.target.value})}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 text-sm"
+                        placeholder="e.g., 6.9271"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Longitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={searchLocation.lng}
+                        onChange={(e) => setSearchLocation({...searchLocation, lng: e.target.value})}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 text-sm"
+                        placeholder="e.g., 79.8612"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleSearch}
+                    disabled={!searchLocation.lat || !searchLocation.lng}
+                    className="w-full bg-blue-500 text-white py-3 px-4 rounded-2xl hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center active:scale-95 font-medium text-sm"
+                  >
+                    <Search size={18} className="mr-2" />
+                    Search Vehicles
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Google Maps Display */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
           <div 
             ref={mapRef}
-            className="h-96 bg-gray-100 rounded-lg"
+            className="h-96 bg-gray-100 rounded-2xl"
             style={{ minHeight: '400px' }}
           />
         </div>
 
         {/* Vehicle List */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Nearby Vehicles ({vehicles.length})
-            </h3>
-            
-            {vehicles.length > 0 ? (
-              <div className="space-y-4">
-                {vehicles.map((vehicle, index) => {
-                  const distance = userLocation ? 
-                    calculateDistance(
-                      userLocation.lat, 
-                      userLocation.lng, 
-                      vehicle.current_location_lat, 
-                      vehicle.current_location_lng
-                    ) : null;
+        <div className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">
+            Nearby Vehicles ({vehicles.length})
+          </h3>
+          
+          {vehicles.length > 0 ? (
+            <div className="space-y-3">
+              {vehicles.map((vehicle, index) => {
+                const distance = userLocation ? 
+                  calculateDistance(
+                    userLocation.lat, 
+                    userLocation.lng, 
+                    vehicle.current_location_lat, 
+                    vehicle.current_location_lng
+                  ) : null;
 
-                  return (
-                    <div key={vehicle.vehicle_id || index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-gray-800">
-                          {vehicle.vehicle_number || 'Collection Vehicle'}
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          vehicle.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : vehicle.status === 'maintenance'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {vehicle.status || 'Unknown'}
-                        </span>
-                      </div>
-                      
-                      {distance !== null && (
-                        <div className={`text-sm font-medium mb-2 ${getDistanceColor(distance)}`}>
-                          📍 {getDistanceText(distance)} ({distance.toFixed(1)} km)
-                        </div>
-                      )}
-                      <div className={`text-sm font-medium mb-2 ${getDistanceColor(distance)}`}>
-                          📞 0789840996
-                        </div>
-                      
-                      {vehicle.last_location_update && (
-                        <div className="flex items-center text-sm text-gray-600 mb-1">
-                          <Clock size={14} className="mr-1" />
-                          Updated: {new Date(vehicle.last_location_update).toLocaleTimeString()}
-                        </div>
-                      )}
-                      
-                      {(vehicle.current_location_lat && vehicle.current_location_lng) && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Navigation size={14} className="mr-1" />
-                          Coordinates: {vehicle.current_location_lat.toFixed(4)}, {vehicle.current_location_lng.toFixed(4)}
-                        </div>
-                      )}
-                      
-                      {vehicle.vehicle_type && (
-                        <div className="text-sm text-gray-600 mt-1">
-                          Type: {vehicle.vehicle_type}
-                        </div>
-                      )}
+                return (
+                  <div key={vehicle.vehicle_id || index} className="bg-gray-50 border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all active:scale-95">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-semibold text-gray-800 text-sm">
+                        {vehicle.vehicle_number || 'Collection Vehicle'}
+                      </span>
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${
+                        vehicle.status === 'active' 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : vehicle.status === 'maintenance'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {vehicle.status || 'Unknown'}
+                      </span>
                     </div>
-                  );
-                })}
+                    
+                    {distance !== null && (
+                      <div className={`text-sm font-medium mb-2 ${getDistanceColor(distance)}`}>
+                        📍 {getDistanceText(distance)} ({distance.toFixed(1)} km)
+                      </div>
+                    )}
+                    
+                    <div className="text-sm font-medium mb-2 text-blue-600">
+                      📞 0789840996
+                    </div>
+                    
+                    {vehicle.last_location_update && (
+                      <div className="flex items-center text-sm text-gray-600 mb-2">
+                        <Clock size={14} className="mr-2" />
+                        Updated: {new Date(vehicle.last_location_update).toLocaleTimeString()}
+                      </div>
+                    )}
+                    
+                    {(vehicle.current_location_lat && vehicle.current_location_lng) && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Navigation size={14} className="mr-2" />
+                        Coordinates: {vehicle.current_location_lat.toFixed(4)}, {vehicle.current_location_lng.toFixed(4)}
+                      </div>
+                    )}
+                    
+                    {vehicle.vehicle_type && (
+                      <div className="text-sm text-gray-600 mt-2">
+                        Type: {vehicle.vehicle_type}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Truck size={32} className="text-gray-400" />
               </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Truck size={48} className="mx-auto mb-4 text-gray-300" />
-                <p>No vehicles found</p>
-                <p className="text-sm mt-1">
-                  {userLocation ? 
-                    "No active vehicles within 50 km radius" :
-                    "Set your location to see nearby vehicles"
-                  }
-                </p>
-              </div>
-            )}
-          </div>
-
-          {vehicles.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
-              <h4 className="font-semibold text-yellow-800 mb-2">Collection Information</h4>
-              <p className="text-yellow-700 text-sm">
-                {vehicles.length === 1 ? 
-                  "A collection vehicle is operating in your area." :
-                  `${vehicles.length} collection vehicles are operating in your area.`
-                } Please have your waste ready for collection.
+              <p className="text-gray-500 text-sm">No vehicles found</p>
+              <p className="text-gray-400 text-xs mt-1">
+                {userLocation ? 
+                  "No active vehicles within 50 km radius" :
+                  "Set your location to see nearby vehicles"
+                }
               </p>
             </div>
           )}
         </div>
+
+        {vehicles.length > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6">
+            <h4 className="font-bold text-amber-800 mb-2 text-sm">Collection Information</h4>
+            <p className="text-amber-700 text-sm">
+              {vehicles.length === 1 ? 
+                "A collection vehicle is operating in your area." :
+                `${vehicles.length} collection vehicles are operating in your area.`
+              } Please have your waste ready for collection.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
