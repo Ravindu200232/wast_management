@@ -5,12 +5,12 @@ const couponSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    default: () => mongoose.Types.ObjectId().toString()
+    default: () => new mongoose.Types.ObjectId().toString()
   },
   resident_id: {
-    type: String,
-    ref: 'Resident',
-    required: true
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User'
   },
   coupon_code: {
     type: String,
@@ -41,7 +41,7 @@ const couponSchema = new mongoose.Schema({
     type: Date
   },
   partner_business_id: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'PartnerBusiness'
   }
 }, {

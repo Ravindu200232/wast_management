@@ -19,6 +19,9 @@ import collectionRoutes from "./routes/collectionRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import routeRoutes from "./routes/routeRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+
 
 dotenv.config();
 
@@ -65,6 +68,8 @@ app.use("/api/collections", collectionRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/routes", routeRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000");

@@ -5,7 +5,7 @@ const vehicleSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    default: () => mongoose.Types.ObjectId().toString()
+    default: () => new mongoose.Types.ObjectId().toString()
   },
   vehicle_number: {
     type: String,
@@ -34,7 +34,7 @@ const vehicleSchema = new mongoose.Schema({
   },
   driver_id: {
     type: String,
-    ref: 'User'
+    required:false
   },
   fuel_level: {
     type: Number

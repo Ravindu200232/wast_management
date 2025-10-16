@@ -1,6 +1,65 @@
+// controllers/vehicleController.js
 import Vehicle from "../models/Vehicle.js";
 import Resident from "../models/Resident.js";
 import CollectionSchedule from "../models/CollectionSchedule.js";
+
+// Create new vehicle
+export const createVehicle = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const vehicle = new Vehicle(req.body);
+    await vehicle.save();
+    
+    res.status(201).json({ message: "Vehicle created successfully", vehicle });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Update vehicle
+export const updateVehicle = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const vehicle = await Vehicle.findOneAndUpdate(
+      { vehicle_id: req.params.id },
+      req.body,
+      { new: true }
+    );
+
+    if (!vehicle) {
+      return res.status(404).json({ message: "Vehicle not found" });
+    }
+
+    res.json({ message: "Vehicle updated successfully", vehicle });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Delete vehicle
+export const deleteVehicle = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const vehicle = await Vehicle.findOneAndDelete({ vehicle_id: req.params.id });
+    
+    if (!vehicle) {
+      return res.status(404).json({ message: "Vehicle not found" });
+    }
+
+    res.json({ message: "Vehicle deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 // Get vehicle assigned to resident's route
 export const getResidentVehicle = async (req, res) => {
@@ -41,7 +100,6 @@ export const getResidentVehicle = async (req, res) => {
   }
 };
 
-// Other existing methods remain the same...
 export const updateVehicleLocation = async (req, res) => {
   try {
     if (req.user.role !== 'driver') {

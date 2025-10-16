@@ -22,6 +22,18 @@ import FactoryOrders from './components/factory/FactoryOrders';
 import FactoryHistory from './components/factory/FactoryHistory';
 import FactoryAnalytics from './components/factory/FactoryAnalytics';
 
+// Admin Components
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './components/admin/AdminDashboard';
+import UserManagement from './components/admin/UserManagement';
+import AdminFactoryRequests from './components/admin/FactoryRequests';
+import InventoryManagement from './components/admin/InventoryManagement';
+import VehicleManagement from './components/admin/VehicleManagement';
+import RouteManagement from './components/admin/RouteManagement';
+import CouponManagement from './components/admin/CouponManagement';
+import Analytics from './components/admin/Analytics';
+import SystemSettings from './components/admin/SystemSettings';
+
 function ProtectedRoute({ children, allowedRoles = [] }) {
   const { user, loading } = useAuth();
   
@@ -183,6 +195,71 @@ function App() {
               <FactoryLayout>
                 <FactoryAnalytics />
               </FactoryLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/users" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout>
+                <UserManagement />
+              </AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/requests" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout>
+                <AdminFactoryRequests />
+              </AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/inventory" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout>
+                <InventoryManagement />
+              </AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/vehicles" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout>
+                <VehicleManagement />
+              </AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/routes" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout>
+                <RouteManagement />
+              </AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/coupons" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout>
+                <CouponManagement />
+              </AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/analytics" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout>
+                <Analytics />
+              </AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/settings" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout>
+                <SystemSettings />
+              </AdminLayout>
             </ProtectedRoute>
           } />
           

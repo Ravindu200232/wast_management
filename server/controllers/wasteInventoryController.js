@@ -64,3 +64,22 @@ export const updateInventory = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+export const deleteInventory = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const inventory = await WasteInventory.findOneAndDelete({ inventory_id: req.params.id });
+
+    if (!inventory) {
+      return res.status(404).json({ message: "Inventory item not found" });
+    }
+
+    res.json({ message: "Inventory deleted", inventory });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
