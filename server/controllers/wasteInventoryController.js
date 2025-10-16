@@ -2,6 +2,7 @@ import WasteInventory from "../models/WasteInventory.js";
 
 export const getInventory = async (req, res) => {
   try {
+    console.log("hi")
     const { waste_type, status } = req.query;
     let filter = {};
 

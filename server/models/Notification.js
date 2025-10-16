@@ -5,7 +5,7 @@ const notificationSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    default: () => mongoose.Types.ObjectId().toString()
+    default: () => new mongoose.Types.ObjectId().toString()
   },
   user_id: {
     type: String,

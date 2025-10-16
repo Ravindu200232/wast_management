@@ -1,6 +1,6 @@
 // src/components/admin/FactoryRequests.jsx
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, CheckCircle, XCircle, Clock, Filter } from 'lucide-react';
+import { ShoppingCart, CheckCircle, XCircle, Clock, Filter, MessageCircle } from 'lucide-react';
 import axios from 'axios';
 
 const FactoryRequests = () => {
@@ -8,6 +8,8 @@ const FactoryRequests = () => {
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [rejectNote, setRejectNote] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(null);
 
   useEffect(() => {
     fetchRequests();
@@ -19,7 +21,7 @@ const FactoryRequests = () => {
 
   const fetchRequests = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/factory/requests/all');
+      const response = await axios.get('http://localhost:3000/api/factory/requests/admin/all');
       setRequests(response.data);
       setLoading(false);
     } catch (error) {
@@ -38,7 +40,7 @@ const FactoryRequests = () => {
 
   const handleApprove = async (requestId) => {
     try {
-      await axios.put(`http://localhost:3000/api/admin/requests/${requestId}/approve`);
+      await axios.put(`http://localhost:3000/api/factory/requests/admin/${requestId}/approve`);
       fetchRequests(); // Refresh the list
     } catch (error) {
       console.error('Error approving request:', error);
@@ -48,11 +50,25 @@ const FactoryRequests = () => {
 
   const handleReject = async (requestId) => {
     try {
-      await axios.put(`http://localhost:3000/api/admin/requests/${requestId}/reject`);
+      await axios.put(`http://localhost:3000/api/factory/requests/admin/${requestId}/reject`, {
+        admin_notes: rejectNote || 'Request rejected by administrator'
+      });
+      setShowRejectModal(null);
+      setRejectNote('');
       fetchRequests(); // Refresh the list
     } catch (error) {
       console.error('Error rejecting request:', error);
       alert('Failed to reject request');
+    }
+  };
+
+  const handleComplete = async (requestId) => {
+    try {
+      await axios.put(`http://localhost:3000/api/factory/requests/admin/${requestId}/complete`);
+      fetchRequests(); // Refresh the list
+    } catch (error) {
+      console.error('Error completing request:', error);
+      alert('Failed to mark request as completed');
     }
   };
 
@@ -74,6 +90,19 @@ const FactoryRequests = () => {
       case 'completed': return <CheckCircle className="text-blue-500" size={20} />;
       default: return <Clock className="text-gray-500" size={20} />;
     }
+  };
+
+  const getTotalValue = (request) => {
+    // This would typically come from the backend
+    const unitPrices = {
+      plastic: 50,
+      glass: 30,
+      metal: 100,
+      paper: 20,
+      electronic: 200,
+      general: 40
+    };
+    return (request.quantity_requested * (unitPrices[request.waste_type] || 50)).toFixed(2);
   };
 
   if (loading) {
@@ -147,7 +176,7 @@ const FactoryRequests = () => {
                         {request.waste_type} - {request.quantity_requested} kg
                       </h3>
                       <p className="text-gray-600 text-sm">
-                        {request.factory_id?.company_name || 'Factory'} • {new Date(request.request_date).toLocaleDateString()}
+                        Factory ID: {request.factory_id} • {new Date(request.request_date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -157,7 +186,7 @@ const FactoryRequests = () => {
                       {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                     </span>
                     <p className="text-lg font-bold text-gray-800 mt-1">
-                      ${(request.quantity_requested * 50).toFixed(2)} {/* Example pricing */}
+                      ${getTotalValue(request)}
                     </p>
                   </div>
                 </div>
@@ -175,7 +204,7 @@ const FactoryRequests = () => {
 
                   <div>
                     <span className="font-medium">Requested By:</span>{' '}
-                    {request.factory_id?.company_name || 'Unknown Factory'}
+                    Factory ({request.factory_id})
                   </div>
 
                   <div>
@@ -189,34 +218,53 @@ const FactoryRequests = () => {
                       {request.special_instructions}
                     </div>
                   )}
+
+                  {request.admin_notes && (
+                    <div className="md:col-span-4">
+                      <span className="font-medium">Admin Notes:</span>{' '}
+                      {request.admin_notes}
+                    </div>
+                  )}
+
+                  {request.approval_date && (
+                    <div className="md:col-span-4">
+                      <span className="font-medium">Approved on:</span>{' '}
+                      {new Date(request.approval_date).toLocaleDateString()}
+                    </div>
+                  )}
                 </div>
 
-                {request.status === 'pending' && (
-                  <div className="mt-4 pt-4 border-t border-gray-200 flex space-x-4">
+                {/* Action Buttons */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  {request.status === 'pending' && (
+                    <div className="flex space-x-4">
+                      <button
+                        onClick={() => handleApprove(request.request_id)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center"
+                      >
+                        <CheckCircle size={16} className="mr-2" />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => setShowRejectModal(request.request_id)}
+                        className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center"
+                      >
+                        <XCircle size={16} className="mr-2" />
+                        Reject
+                      </button>
+                    </div>
+                  )}
+
+                  {request.status === 'approved' && (
                     <button
-                      onClick={() => handleApprove(request.request_id)}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center"
+                      onClick={() => handleComplete(request.request_id)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center"
                     >
                       <CheckCircle size={16} className="mr-2" />
-                      Approve
+                      Mark as Completed
                     </button>
-                    <button
-                      onClick={() => handleReject(request.request_id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center"
-                    >
-                      <XCircle size={16} className="mr-2" />
-                      Reject
-                    </button>
-                  </div>
-                )}
-
-                {request.admin_notes && (
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      <strong>Admin Notes:</strong> {request.admin_notes}
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -232,6 +280,51 @@ const FactoryRequests = () => {
           </div>
         )}
       </div>
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Reject Request
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <MessageCircle size={16} className="inline mr-2" />
+                  Rejection Reason (Optional)
+                </label>
+                <textarea
+                  value={rejectNote}
+                  onChange={(e) => setRejectNote(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="Provide a reason for rejecting this request..."
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-4 mt-6">
+              <button
+                onClick={() => {
+                  setShowRejectModal(null);
+                  setRejectNote('');
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleReject(showRejectModal)}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Confirm Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

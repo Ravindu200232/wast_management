@@ -5,7 +5,7 @@ import RecyclingFactory from "../models/RecyclingFactory.js";
 // Get All Users (Admin only)
 export async function getAllUsers(req, res) {
   try {
-    if (req.user == null || req.user.role !== 'admin') {
+    if (req.user == null || (req.user.role !== 'admin' && req.user.role !== 'driver')) {
       return res.status(401).json({ message: "Can't do this task" });
     }
 

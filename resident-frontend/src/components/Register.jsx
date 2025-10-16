@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, UserPlus, Home, Building2, User } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Home, Building2, User, Truck } from 'lucide-react';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -22,7 +22,11 @@ const Register = () => {
     company_name: '',
     registration_number: '',
     business_address: '',
-    contact_person: ''
+    contact_person: '',
+    // Driver-specific fields
+    license_number: '',
+    vehicle_type: '',
+    experience_years: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -64,6 +68,15 @@ const Register = () => {
       }
     }
 
+    // Validate driver-specific fields if role is driver
+    if (formData.role === 'driver') {
+      if (!formData.license_number || !formData.vehicle_type) {
+        setError('Please fill all required driver information');
+        setLoading(false);
+        return;
+      }
+    }
+
     const result = await register(formData);
     
     if (result.success) {
@@ -79,7 +92,17 @@ const Register = () => {
 
   const roles = [
     { value: 'resident', label: 'Resident', icon: User, description: 'Home waste management' },
-    { value: 'factory', label: 'Recycling Factory', icon: Building2, description: 'Industrial waste procurement' }
+    { value: 'factory', label: 'Recycling Factory', icon: Building2, description: 'Industrial waste procurement' },
+    { value: 'driver', label: 'Collection Driver', icon: Truck, description: 'Waste collection operations' }
+  ];
+
+  const vehicleTypes = [
+    'Compact Truck',
+    'Medium Truck',
+    'Large Truck',
+    'Recycling Vehicle',
+    'Waste Compactor',
+    'Other'
   ];
 
   return (
@@ -105,7 +128,7 @@ const Register = () => {
             <label className="block text-sm font-medium text-gray-700 mb-4">
               Account Type *
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {roles.map((role) => {
                 const IconComponent = role.icon;
                 return (
@@ -118,8 +141,8 @@ const Register = () => {
                         : 'border-gray-200 hover:border-green-300 hover:bg-green-50'
                     }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    <div className="flex flex-col items-center text-center">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${
                         formData.role === role.value ? 'bg-green-500' : 'bg-gray-100'
                       }`}>
                         <IconComponent 
@@ -128,12 +151,12 @@ const Register = () => {
                         />
                       </div>
                       <div>
-                        <h3 className={`font-semibold ${
+                        <h3 className={`font-semibold text-sm ${
                           formData.role === role.value ? 'text-green-700' : 'text-gray-800'
                         }`}>
                           {role.label}
                         </h3>
-                        <p className="text-sm text-gray-600">{role.description}</p>
+                        <p className="text-xs text-gray-600 mt-1">{role.description}</p>
                       </div>
                     </div>
                   </div>
@@ -161,7 +184,7 @@ const Register = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
+                Phone Number *
               </label>
               <input
                 type="tel"
@@ -170,6 +193,7 @@ const Register = () => {
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 placeholder="Enter your phone number"
+                required
               />
             </div>
           </div>
@@ -209,7 +233,7 @@ const Register = () => {
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Enter company name"
-                    required={formData.role === 'factory'}
+                    required
                   />
                 </div>
 
@@ -224,7 +248,7 @@ const Register = () => {
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Business registration number"
-                    required={formData.role === 'factory'}
+                    required
                   />
                 </div>
 
@@ -239,7 +263,7 @@ const Register = () => {
                     rows={3}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Enter complete business address"
-                    required={formData.role === 'factory'}
+                    required
                   />
                 </div>
 
@@ -254,7 +278,70 @@ const Register = () => {
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Primary contact person"
-                    required={formData.role === 'factory'}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Driver-specific Information */}
+          {formData.role === 'driver' && (
+            <div className="border-t pt-6">
+              <div className="flex items-center mb-4">
+                <Truck size={20} className="text-gray-400 mr-2" />
+                <h3 className="text-lg font-semibold text-gray-800">Driver Information</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Driver License Number *
+                  </label>
+                  <input
+                    type="text"
+                    name="license_number"
+                    value={formData.license_number}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter license number"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Vehicle Type *
+                  </label>
+                  <select
+                    name="vehicle_type"
+                    value={formData.vehicle_type}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select vehicle type</option>
+                    {vehicleTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Years of Experience
+                  </label>
+                  <input
+                    type="number"
+                    name="experience_years"
+                    value={formData.experience_years}
+                    onChange={handleChange}
+                    min="0"
+                    max="50"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Years of experience"
                   />
                 </div>
               </div>

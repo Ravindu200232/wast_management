@@ -26,10 +26,11 @@ const CouponManagement = () => {
   const fetchCoupons = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/coupons');
-      setCoupons(response.data);
-      setLoading(false);
+      setCoupons(response.data || []);
     } catch (error) {
       console.error('Error fetching coupons:', error);
+      setCoupons([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -37,18 +38,56 @@ const CouponManagement = () => {
   const fetchResidents = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/users');
-      setResidents(response.data.filter(user => user.role === 'resident' && user.is_active == true));
+      const activeResidents = (response.data || []).filter(user => 
+        user.role === 'resident' && user.is_active === true
+      );
+      setResidents(activeResidents);
     } catch (error) {
       console.error('Error fetching residents:', error);
+      setResidents([]);
     }
   };
 
   const fetchStats = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/coupons/stats');
-      setStats(response.data);
+      setStats(response.data || {});
     } catch (error) {
       console.error('Error fetching coupon stats:', error);
+      setStats({});
+    }
+  };
+
+  // Safe data accessor functions
+  const getResidentName = (coupon) => {
+    if (!coupon) return 'Unknown Resident';
+    
+    // Handle different possible structures
+    if (coupon.resident_id && typeof coupon.resident_id === 'object') {
+      return coupon.resident_id.full_name || 'Unknown Resident';
+    }
+    
+    // If resident_id is just an ID, find the resident name from residents list
+    const resident = residents.find(r => 
+      r.resident_details?.resident_id === coupon.resident_id || 
+      r.user_id === coupon.resident_id
+    );
+    return resident?.full_name || 'Unknown Resident';
+  };
+
+  const getCouponType = (coupon) => {
+    if (!coupon?.coupon_type) return 'Unknown';
+    return coupon.coupon_type.replace('_', ' ').toLowerCase();
+  };
+
+  const getStatusColor = (status) => {
+    if (!status) return 'bg-gray-100 text-gray-800';
+    
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'redeemed': return 'bg-blue-100 text-blue-800';
+      case 'expired': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -56,8 +95,8 @@ const CouponManagement = () => {
     e.preventDefault();
     try {
       await axios.post('http://localhost:3000/api/coupons/issue', formData);
-      fetchCoupons();
-      fetchStats();
+      await fetchCoupons();
+      await fetchStats();
       setShowAddForm(false);
       setFormData({
         resident_id: '',
@@ -74,11 +113,16 @@ const CouponManagement = () => {
   };
 
   const handleDelete = async (couponId) => {
+    if (!couponId) {
+      alert('Invalid coupon ID');
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this coupon?')) {
       try {
         await axios.delete(`http://localhost:3000/api/coupons/${couponId}`);
-        fetchCoupons();
-        fetchStats();
+        await fetchCoupons();
+        await fetchStats();
         alert('Coupon deleted successfully!');
       } catch (error) {
         console.error('Error deleting coupon:', error);
@@ -87,19 +131,9 @@ const CouponManagement = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'redeemed': return 'bg-blue-100 text-blue-800';
-      case 'expired': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const refreshData = () => {
     setLoading(true);
-    fetchCoupons();
-    fetchStats();
+    Promise.all([fetchCoupons(), fetchStats()]);
   };
 
   if (loading) {
@@ -112,6 +146,7 @@ const CouponManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header and Stats sections remain the same */}
       <div className="bg-white rounded-2xl shadow-sm p-6">
         <div className="flex items-center justify-between">
           <div>
@@ -188,7 +223,7 @@ const CouponManagement = () => {
         </div>
       </div>
 
-      {/* Issue Coupon Form */}
+      {/* Issue Coupon Form - remains the same */}
       {showAddForm && (
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Issue New Coupon</h2>
@@ -286,7 +321,7 @@ const CouponManagement = () => {
         </div>
       )}
 
-      {/* Coupons List */}
+      {/* Coupons List with safe data access */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-800">
@@ -315,31 +350,31 @@ const CouponManagement = () => {
                     <div className="flex items-center">
                       <Gift className="text-gray-400 mr-3" size={16} />
                       <code className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                        {coupon.coupon_code}
+                        {coupon.coupon_code || 'N/A'}
                       </code>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {coupon.resident_id.full_name || 'Unknown Resident'}
+                    {getResidentName(coupon)}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900 capitalize">
-                    {coupon.coupon_type?.replace('_', ' ') || 'Unknown'}
+                    {getCouponType(coupon)}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
-                    ${coupon.value}
+                    ${coupon.value || '0.00'}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {coupon.waste_weight_earned} kg
+                    {coupon.waste_weight_earned || '0'} kg
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(coupon.issue_date).toLocaleDateString()}
+                    {coupon.issue_date ? new Date(coupon.issue_date).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(coupon.expiry_date).toLocaleDateString()}
+                    {coupon.expiry_date ? new Date(coupon.expiry_date).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(coupon.status)}`}>
-                      {coupon.status}
+                      {coupon.status || 'unknown'}
                     </span>
                   </td>
                   <td className="px-6 py-4">

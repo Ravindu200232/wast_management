@@ -85,3 +85,42 @@ export const updateSchedule = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+
+// Add this to your scheduleController.js
+// Get schedules for driver (based on assigned driver)
+export const getDriverSchedules = async (req, res) => {
+  try {
+    if (req.user.role !== 'driver') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { date } = req.query;
+    let filter = { driver_id: req.user.user_id };
+
+    if (date) {
+      filter.collection_date = new Date(date);
+    } else {
+      // Default to today's schedule
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      filter.collection_date = {
+        $gte: today,
+        $lt: tomorrow
+      };
+    }
+
+    const schedules = await CollectionSchedule.find(filter)
+      .populate('route_id')
+      .populate('vehicle_id')
+      .sort({ collection_date: 1 });
+
+    res.json(schedules);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

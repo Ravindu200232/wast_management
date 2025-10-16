@@ -7,15 +7,21 @@ export const recordCollection = async (req, res) => {
     if (req.user.role !== 'driver') {
       return res.status(403).json({ message: "Access denied" });
     }
+   
 
     const collection = new WasteCollection(req.body);
     await collection.save();
+   
 
     // Update resident's total waste contributed
     await Resident.findOneAndUpdate(
-      { resident_id: req.body.resident_id },
+      { user_id: req.body.resident_id },
       { $inc: { total_waste_contributed: req.body.weight } }
     );
+
+    const residentdate = await Resident.findOne({user_id : req.body.resident_id})
+    const correctResId = residentdate._id
+    console.log(correctResId)
 
     // Check if coupon should be issued (business logic)
     if (req.body.weight >= 10) {
@@ -24,7 +30,7 @@ export const recordCollection = async (req, res) => {
         const couponValue = rewardPoints / 10;
         
         const coupon = new Coupon({
-          resident_id: req.body.resident_id,
+          resident_id: correctResId,
           coupon_code: `CPN${Date.now()}`,
           coupon_type: 'waste_reward',
           value: couponValue,
@@ -45,11 +51,14 @@ export const recordCollection = async (req, res) => {
 export const getCollectionHistory = async (req, res) => {
   try {
     let collections;
+    console.log(req.user)
+   
     
     if (req.user.role === 'resident') {
       const resident = await Resident.findOne({ user_id: req.user.user_id });
-      collections = await WasteCollection.find({ resident_id: resident.resident_id });
-    } else if (req.user.role === 'admin') {
+      console.log(resident)
+      collections = await WasteCollection.find({ resident_id: resident.user_id });
+    } else if (req.user.role === 'admin' || req.user.role === 'driver') {
       collections = await WasteCollection.find();
     } else {
       return res.status(403).json({ message: "Access denied" });

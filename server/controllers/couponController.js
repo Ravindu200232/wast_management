@@ -30,13 +30,17 @@ export const getMyCoupons = async (req, res) => {
     }
 
     const resident = await Resident.findOne({ user_id: req.user.user_id });
+    
     if (!resident) {
       return res.status(404).json({ message: "Resident profile not found" });
     }
+    console.log(resident,"hi")
 
     const coupons = await Coupon.find({ 
-      resident_id: resident.resident_id
+      resident_id: resident._id
     }).sort({ issue_date: -1 });
+
+    
 
     res.json(coupons);
   } catch (error) {

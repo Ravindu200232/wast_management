@@ -32,10 +32,10 @@ const Login = () => {
           redirectPath = '/factory';
           break;
         case 'admin':
-          redirectPath = '/admin'; // You can create an admin dashboard later
+          redirectPath = '/admin';
           break;
         case 'driver':
-          redirectPath = '/driver'; // You can create a driver dashboard later
+          redirectPath = '/driver';
           break;
         default:
           redirectPath = from;
@@ -46,6 +46,12 @@ const Login = () => {
     }
     
     setLoading(false);
+  };
+
+  // Quick login for demo accounts
+  const handleQuickLogin = (demoEmail, demoPassword) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
   };
 
   return (
@@ -127,23 +133,7 @@ const Login = () => {
           </p>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <p className="text-center text-sm text-gray-600">
-            Demo Accounts:
-          </p>
-          <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-            <div className="text-center">
-              <p className="font-medium">Resident</p>
-              <p>resident@example.com</p>
-              <p>password: 123456</p>
-            </div>
-            <div className="text-center">
-              <p className="font-medium">Factory</p>
-              <p>factory@example.com</p>
-              <p>password: 123456</p>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   );
