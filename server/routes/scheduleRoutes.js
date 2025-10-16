@@ -1,9 +1,11 @@
 import express from "express";
-import { processPayment, getPaymentDetails } from "../controllers/paymentController.js";
+import { getSchedules, createSchedule, updateSchedule, getResidentSchedules } from "../controllers/collectionScheduleController.js";
 
-const paymentRouter = express.Router();
+const scheduleRouter = express.Router();
 
-paymentRouter.post("/", processPayment);
-paymentRouter.get("/:orderId", getPaymentDetails);
+scheduleRouter.get("/", getResidentSchedules); // For residents to view their schedules
+scheduleRouter.get("/all", getSchedules); // For admin to view all schedules
+scheduleRouter.post("/", createSchedule);
+scheduleRouter.put("/:id", updateSchedule);
 
-export default paymentRouter;
+export default scheduleRouter;

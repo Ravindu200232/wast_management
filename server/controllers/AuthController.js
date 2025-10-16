@@ -10,17 +10,23 @@ export async function register(req, res) {
   try {
     const { email, password, role, full_name, phone, address } = req.body;
 
+        console.log("hi")
+
     // Check if user exists
     const existingUser = await User.findOne({ email });
+    console.log(existingUser)
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
+
+    const user_id = `user_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
 
     // Hash password
     const password_hash = bcrypt.hashSync(password, 10);
 
     // Create user
     const newUser = new User({
+    user_id,
       email,
       password_hash,
       role,
@@ -34,6 +40,7 @@ export async function register(req, res) {
     // Create role-specific profile
     if (role === 'resident') {
       const resident = new Resident({
+        resident_id: `resident_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`,
         user_id: newUser.user_id,
         house_number: req.body.house_number,
         street: req.body.street,
@@ -41,9 +48,12 @@ export async function register(req, res) {
         city: req.body.city,
         postal_code: req.body.postal_code
       });
+      console.log(user_id,req.body.house_number,req.body.street,req.body.area,req.body.city,req.body.postal_code)
       await resident.save();
+
     } else if (role === 'factory') {
       const factory = new RecyclingFactory({
+        factory_id: `factory_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`,
         user_id: newUser.user_id,
         company_name: req.body.company_name,
         registration_number: req.body.registration_number,
@@ -68,6 +78,7 @@ export async function register(req, res) {
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
+    console.log(req.body,"hi")
 
     // Find user
     const user = await User.findOne({ email, is_active: true });

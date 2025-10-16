@@ -3,10 +3,10 @@ import Resident from "../models/Resident.js";
 
 export const requestExtraPickup = async (req, res) => {
   try {
+
     if (req.user.role !== 'resident') {
       return res.status(403).json({ message: "Access denied" });
     }
-
     const resident = await Resident.findOne({ user_id: req.user.user_id });
     if (!resident) {
       return res.status(404).json({ message: "Resident profile not found" });

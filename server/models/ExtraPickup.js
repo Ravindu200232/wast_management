@@ -5,7 +5,7 @@ const extraPickupSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    default: () => mongoose.Types.ObjectId().toString()
+    default: () => new mongoose.Types.ObjectId().toString()
   },
   resident_id: {
     type: String,
@@ -54,4 +54,4 @@ const extraPickupSchema = new mongoose.Schema({
 });
 
 const ExtraPickup = mongoose.model('ExtraPickup', extraPickupSchema);
-export default ExtraPickup
+export default ExtraPickup;
