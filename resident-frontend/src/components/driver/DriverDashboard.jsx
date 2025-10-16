@@ -9,7 +9,9 @@ import {
   CheckCircle,
   AlertTriangle,
   Navigation,
-  TrendingUp
+  TrendingUp,
+  ArrowRight,
+  User
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -33,17 +35,17 @@ const DriverDashboard = () => {
       setLoading(true);
       
       // Fetch driver's assigned vehicle
-      const vehicleResponse = await axios.get('http://localhost:3000/api/vehicles/driver-vehicle');
+      const vehicleResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/vehicles/driver-vehicle`);
       const assignedVehicle = vehicleResponse.data;
 
       // Fetch today's schedule for driver
       const today = new Date().toISOString().split('T')[0];
-      const scheduleResponse = await axios.get(`http://localhost:3000/api/schedules/driver?date=${today}`);
+      const scheduleResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/schedules/driver?date=${today}`);
       const schedules = scheduleResponse.data;
       const todaySchedule = schedules.length > 0 ? schedules[0] : null;
 
       // Fetch today's collections made by this driver
-      const collectionsResponse = await axios.get('http://localhost:3000/api/collections/history');
+      const collectionsResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/collections/history`);
       const todayCollections = collectionsResponse.data.filter(collection => {
         const collectionDate = new Date(collection.collection_date).toISOString().split('T')[0];
         return collectionDate === today && collection.team_id === 'current-driver-id'; // Adjust based on your auth
@@ -91,7 +93,7 @@ const DriverDashboard = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          await axios.put(`http://localhost:3000/api/vehicles/${vehicleInfo.vehicle_id}/location`, {
+          await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/vehicles/${vehicleInfo.vehicle_id}/location`, {
             current_location_lat: position.coords.latitude,
             current_location_lng: position.coords.longitude
           });
@@ -113,265 +115,302 @@ const DriverDashboard = () => {
       description: 'View your collection route for today',
       icon: MapPin,
       link: '/driver/today',
-      color: 'bg-blue-500'
+      color: 'from-blue-500 to-cyan-500'
     },
     {
       title: 'Record Collection',
       description: 'Log waste collection details',
       icon: Package,
       link: '/driver/collections',
-      color: 'bg-green-500'
+      color: 'from-emerald-500 to-green-500'
     },
     {
       title: 'Update Location',
       description: 'Share your current GPS location',
       icon: Navigation,
       action: updateLocation,
-      color: 'bg-purple-500'
+      color: 'from-purple-500 to-pink-500'
     },
     {
       title: 'Report Issue',
       description: 'Report delays or problems',
       icon: AlertTriangle,
       link: '/driver/issues',
-      color: 'bg-red-500'
+      color: 'from-amber-500 to-orange-500'
     }
   ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      <div className="min-h-screen bg-gray-50/60 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50/60 pb-6">
       {/* Header */}
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Driver Dashboard</h1>
-        <p className="text-gray-600">Manage your waste collection activities</p>
-      </div>
-
-      {/* Vehicle Status */}
-      {vehicleInfo ? (
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                <Truck className="text-orange-600" size={24} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800">{vehicleInfo.vehicle_number}</h3>
-                <p className="text-gray-600 text-sm">
-                  {vehicleInfo.vehicle_type} • Capacity: {vehicleInfo.capacity} kg
-                </p>
-                <p className={`text-sm ${
-                  vehicleInfo.status === 'active' ? 'text-green-600' : 'text-yellow-600'
-                }`}>
-                  Status: {vehicleInfo.status}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={updateLocation}
-              className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors flex items-center"
-            >
-              <Navigation size={16} className="mr-2" />
-              Update Location
-            </button>
+      <div className="bg-gradient-to-r from-orange-500 to-amber-600 px-6 pt-8 pb-6 rounded-b-3xl shadow-lg">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-1">Driver Dashboard</h1>
+            <p className="text-orange-100 text-sm">Manage your waste collection activities</p>
+          </div>
+          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/30">
+            <Truck className="text-white" size={24} />
           </div>
         </div>
-      ) : (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
-          <div className="flex items-center">
-            <AlertTriangle className="text-yellow-600 mr-2" size={20} />
-            <div>
-              <h3 className="font-semibold text-yellow-800">No Vehicle Assigned</h3>
-              <p className="text-yellow-700 text-sm">
-                Please contact administration to get a vehicle assigned to you.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Today's Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Completed Stops</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/30">
+            <div className="text-center">
+              <p className="text-orange-100 text-xs font-medium">Completed</p>
+              <p className="text-white text-sm font-bold mt-1">
                 {todayStats.completed}
               </p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="text-green-600" size={24} />
-            </div>
           </div>
-        </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Pending Stops</p>
-              <p className="text-3xl font-bold text-orange-600 mt-2">
+          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/30">
+            <div className="text-center">
+              <p className="text-orange-100 text-xs font-medium">Pending</p>
+              <p className="text-white text-sm font-bold mt-1">
                 {todayStats.pending}
               </p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-              <Clock className="text-orange-600" size={24} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Total Collected</p>
-              <p className="text-3xl font-bold text-blue-600 mt-2">
-                {todayStats.totalWeight} kg
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <Package className="text-blue-600" size={24} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Progress</p>
-              <p className="text-3xl font-bold text-purple-600 mt-2">
-                {todayStats.total > 0 ? Math.round((todayStats.completed / todayStats.total) * 100) : 0}%
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <TrendingUp className="text-purple-600" size={24} />
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {quickActions.map((action, index) => (
-          action.link ? (
-            <Link
-              key={index}
-              to={action.link}
-              className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer"
-            >
-              <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center mb-4`}>
-                <action.icon className="text-white" size={24} />
+      <div className="px-4 -mt-4 space-y-4">
+        {/* Vehicle Status */}
+        {vehicleInfo ? (
+          <div className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center">
+                  <Truck className="text-white" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-sm">{vehicleInfo.vehicle_number}</h3>
+                  <p className="text-gray-600 text-xs">
+                    {vehicleInfo.vehicle_type} • {vehicleInfo.capacity} kg capacity
+                  </p>
+                  <p className={`text-xs font-medium ${
+                    vehicleInfo.status === 'active' ? 'text-emerald-600' : 'text-amber-600'
+                  }`}>
+                    Status: {vehicleInfo.status}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                {action.title}
-              </h3>
-              <p className="text-gray-600 text-sm">
-                {action.description}
-              </p>
-            </Link>
-          ) : (
-            <button
-              key={index}
-              onClick={action.action}
-              disabled={!vehicleInfo}
-              className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer text-left disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center mb-4`}>
-                <action.icon className="text-white" size={24} />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                {action.title}
-              </h3>
-              <p className="text-gray-600 text-sm">
-                {action.description}
-              </p>
-            </button>
-          )
-        ))}
-      </div>
-
-      {/* Today's Schedule */}
-      {todaySchedule ? (
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-800">Today's Schedule</h2>
-            <Clock className="text-gray-400" size={20} />
+              <button
+                onClick={updateLocation}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 rounded-xl hover:shadow-lg transition-all duration-300 active:scale-95 font-medium text-sm shadow-lg shadow-purple-200 flex items-center"
+              >
+                <Navigation size={16} className="mr-2" />
+                Update Location
+              </button>
+            </div>
           </div>
-          
-          <div className="bg-blue-50 rounded-xl p-4">
+        ) : (
+          <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
+                <AlertTriangle className="text-white" size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold text-amber-800 text-sm">No Vehicle Assigned</h3>
+                <p className="text-amber-700 text-xs">
+                  Contact administration to get a vehicle assigned
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Additional Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-gray-800">
-                  {todaySchedule.route_id?.route_name || 'Collection Route'}
-                </p>
-                <p className="text-gray-600 text-sm mt-1">
-                  {todaySchedule.start_time} - {todaySchedule.end_time}
-                </p>
-                <p className="text-gray-500 text-sm">
-                  Estimated stops: {todayStats.total}
+                <p className="text-gray-600 text-xs font-medium">Total Collected</p>
+                <p className="text-blue-600 text-lg font-bold mt-1">
+                  {todayStats.totalWeight} kg
                 </p>
               </div>
-              <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm">
-                In Progress
-              </div>
+              <Package className="text-blue-400" size={20} />
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow-sm p-6">
-          <div className="text-center py-8">
-            <Clock size={48} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Schedule for Today</h3>
-            <p className="text-gray-500">
-              You don't have any scheduled collections for today.
-            </p>
-          </div>
-        </div>
-      )}
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h2>
-        <div className="space-y-3">
-          {todayStats.completed > 0 ? (
-            <>
-              <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <CheckCircle className="text-green-600" size={16} />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Collection Completed</p>
-                    <p className="text-gray-600 text-sm">{todayStats.completed} stops today</p>
-                  </div>
-                </div>
-                <span className="text-sm text-gray-500">Today</span>
+          <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-xs font-medium">Progress</p>
+                <p className="text-purple-600 text-lg font-bold mt-1">
+                  {todayStats.total > 0 ? Math.round((todayStats.completed / todayStats.total) * 100) : 0}%
+                </p>
               </div>
-              
-              <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Navigation className="text-blue-600" size={16} />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Location Updated</p>
-                    <p className="text-gray-600 text-sm">GPS coordinates shared</p>
-                  </div>
-                </div>
-                <span className="text-sm text-gray-500">Today</span>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-4 text-gray-500">
-              <p>No activity recorded today</p>
+              <TrendingUp className="text-purple-400" size={20} />
             </div>
-          )}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {quickActions.map((action, index) => (
+              action.link ? (
+                <Link
+                  key={index}
+                  to={action.link}
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-2xl hover:shadow-md transition-all active:scale-95"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 bg-gradient-to-r ${action.color} rounded-xl flex items-center justify-center`}>
+                      <action.icon className="text-white" size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-sm">{action.title}</h3>
+                      <p className="text-gray-600 text-xs">{action.description}</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="text-gray-400" size={16} />
+                </Link>
+              ) : (
+                <button
+                  key={index}
+                  onClick={action.action}
+                  disabled={!vehicleInfo}
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-2xl hover:shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 bg-gradient-to-r ${action.color} rounded-xl flex items-center justify-center`}>
+                      <action.icon className="text-white" size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-sm">{action.title}</h3>
+                      <p className="text-gray-600 text-xs">{action.description}</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="text-gray-400" size={16} />
+                </button>
+              )
+            ))}
+          </div>
+        </div>
+
+        {/* Today's Schedule */}
+        {todaySchedule ? (
+          <div className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800">Today's Schedule</h2>
+              <Clock className="text-gray-400" size={20} />
+            </div>
+            
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-gray-800 text-sm">
+                    {todaySchedule.route_id?.route_name || 'Collection Route'}
+                  </p>
+                  <p className="text-gray-600 text-xs mt-1">
+                    {todaySchedule.start_time} - {todaySchedule.end_time}
+                  </p>
+                  <p className="text-gray-500 text-xs">
+                    {todayStats.total} estimated stops
+                  </p>
+                </div>
+                <div className="bg-blue-500 text-white px-3 py-1.5 rounded-full text-xs font-medium">
+                  In Progress
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
+            <div className="text-center py-4">
+              <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <Clock size={24} className="text-gray-400" />
+              </div>
+              <p className="text-gray-500 text-sm">No Schedule for Today</p>
+              <p className="text-gray-400 text-xs mt-1">No scheduled collections for today</p>
+            </div>
+          </div>
+        )}
+
+        {/* Recent Activity */}
+        <div className="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Recent Activity</h2>
+          <div className="space-y-3">
+            {todayStats.completed > 0 ? (
+              <>
+                <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="text-emerald-600" size={14} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800 text-sm">Collection Completed</p>
+                      <p className="text-gray-600 text-xs">{todayStats.completed} stops today</p>
+                    </div>
+                  </div>
+                  <span className="text-gray-500 text-xs">Today</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Navigation className="text-blue-600" size={14} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800 text-sm">Location Updated</p>
+                      <p className="text-gray-600 text-xs">GPS coordinates shared</p>
+                    </div>
+                  </div>
+                  <span className="text-gray-500 text-xs">Today</span>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-500 text-sm">No activity recorded today</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Performance Summary */}
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-3xl p-6">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
+              <User className="text-white" size={20} />
+            </div>
+            <div>
+              <h4 className="font-bold text-orange-800 text-sm">Driver Performance</h4>
+              <p className="text-orange-600 text-xs">Today's collection overview</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-orange-800 font-bold text-sm">{todayStats.completed}</p>
+              <p className="text-orange-600 text-xs">Completed</p>
+            </div>
+            <div>
+              <p className="text-emerald-600 font-bold text-sm">{todayStats.totalWeight}kg</p>
+              <p className="text-emerald-600 text-xs">Collected</p>
+            </div>
+            <div>
+              <p className="text-blue-600 font-bold text-sm">
+                {todayStats.total > 0 ? Math.round((todayStats.completed / todayStats.total) * 100) : 0}%
+              </p>
+              <p className="text-blue-600 text-xs">Progress</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
