@@ -13,9 +13,72 @@ import Feedback from './components/Feedback';
 import Profile from './components/Profile';
 import Layout from './components/Layout';
 
-function ProtectedRoute({ children }) {
+// Factory Components
+import FactoryLayout from './components/factory/FactoryLayout';
+import FactoryDashboard from './components/factory/FactoryDashboard';
+import FactoryInventory from './components/factory/FactoryInventory';
+import FactoryRequests from './components/factory/FactoryRequests';
+import FactoryOrders from './components/factory/FactoryOrders';
+import FactoryHistory from './components/factory/FactoryHistory';
+import FactoryAnalytics from './components/factory/FactoryAnalytics';
+
+function ProtectedRoute({ children, allowedRoles = [] }) {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  return children;
+}
+
+function RoleBasedRedirect() {
   const { user } = useAuth();
-  return user ? children : <Navigate to="/login" />;
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  switch (user.role) {
+    case 'factory':
+      return <Navigate to="/factory" replace />;
+    case 'admin':
+      return <Navigate to="/admin" replace />;
+    case 'driver':
+      return <Navigate to="/driver" replace />;
+    default:
+      return <Navigate to="/" replace />;
+  }
+}
+
+function Unauthorized() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">401</h1>
+        <p className="text-xl text-gray-600 mb-4">Unauthorized Access</p>
+        <p className="text-gray-500 mb-8">You don't have permission to access this page.</p>
+        <button
+          onClick={() => window.history.back()}
+          className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
+        >
+          Go Back
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function App() {
@@ -23,57 +86,108 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
+          {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          
+          {/* Resident Routes */}
           <Route path="/" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['resident', 'admin', 'driver']}>
               <Layout>
                 <Dashboard />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/track-vehicle" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['resident', 'admin', 'driver']}>
               <Layout>
                 <TrackVehicle />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/extra-pickup" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['resident', 'admin']}>
               <Layout>
                 <ExtraPickup />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/my-coupons" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['resident', 'admin']}>
               <Layout>
                 <MyCoupons />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/collection-history" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['resident', 'admin']}>
               <Layout>
                 <CollectionHistory />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/feedback" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['resident', 'admin']}>
               <Layout>
                 <Feedback />
               </Layout>
             </ProtectedRoute>
           } />
           <Route path="/profile" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['resident', 'factory', 'admin', 'driver']}>
               <Layout>
                 <Profile />
               </Layout>
             </ProtectedRoute>
           } />
+          
+          {/* Factory Routes */}
+          <Route path="/factory" element={
+            <ProtectedRoute allowedRoles={['factory', 'admin']}>
+              <FactoryLayout>
+                <FactoryDashboard />
+              </FactoryLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/factory/inventory" element={
+            <ProtectedRoute allowedRoles={['factory', 'admin']}>
+              <FactoryLayout>
+                <FactoryInventory />
+              </FactoryLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/factory/requests" element={
+            <ProtectedRoute allowedRoles={['factory', 'admin']}>
+              <FactoryLayout>
+                <FactoryRequests />
+              </FactoryLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/factory/orders" element={
+            <ProtectedRoute allowedRoles={['factory', 'admin']}>
+              <FactoryLayout>
+                <FactoryOrders />
+              </FactoryLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/factory/history" element={
+            <ProtectedRoute allowedRoles={['factory', 'admin']}>
+              <FactoryLayout>
+                <FactoryHistory />
+              </FactoryLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/factory/analytics" element={
+            <ProtectedRoute allowedRoles={['factory', 'admin']}>
+              <FactoryLayout>
+                <FactoryAnalytics />
+              </FactoryLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Default redirect based on role */}
+          <Route path="*" element={<RoleBasedRedirect />} />
         </Routes>
       </Router>
     </AuthProvider>

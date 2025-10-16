@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, UserPlus, Home } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Home, Building2, User } from 'lucide-react';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -17,7 +17,12 @@ const Register = () => {
     street: '',
     area: '',
     city: '',
-    postal_code: ''
+    postal_code: '',
+    // Factory-specific fields
+    company_name: '',
+    registration_number: '',
+    business_address: '',
+    contact_person: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -50,6 +55,15 @@ const Register = () => {
       return;
     }
 
+    // Validate factory-specific fields if role is factory
+    if (formData.role === 'factory') {
+      if (!formData.company_name || !formData.registration_number || !formData.business_address) {
+        setError('Please fill all required company information');
+        setLoading(false);
+        return;
+      }
+    }
+
     const result = await register(formData);
     
     if (result.success) {
@@ -62,6 +76,11 @@ const Register = () => {
     
     setLoading(false);
   };
+
+  const roles = [
+    { value: 'resident', label: 'Resident', icon: User, description: 'Home waste management' },
+    { value: 'factory', label: 'Recycling Factory', icon: Building2, description: 'Industrial waste procurement' }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
@@ -81,6 +100,48 @@ const Register = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Role Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-4">
+              Account Type *
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {roles.map((role) => {
+                const IconComponent = role.icon;
+                return (
+                  <div
+                    key={role.value}
+                    onClick={() => setFormData({ ...formData, role: role.value })}
+                    className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
+                      formData.role === role.value
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-gray-200 hover:border-green-300 hover:bg-green-50'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        formData.role === role.value ? 'bg-green-500' : 'bg-gray-100'
+                      }`}>
+                        <IconComponent 
+                          size={20} 
+                          className={formData.role === role.value ? 'text-white' : 'text-gray-600'} 
+                        />
+                      </div>
+                      <div>
+                        <h3 className={`font-semibold ${
+                          formData.role === role.value ? 'text-green-700' : 'text-gray-800'
+                        }`}>
+                          {role.label}
+                        </h3>
+                        <p className="text-sm text-gray-600">{role.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Personal Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -128,99 +189,173 @@ const Register = () => {
             />
           </div>
 
-          {/* Address Information */}
-          <div className="border-t pt-6">
-            <div className="flex items-center mb-4">
-              <Home size={20} className="text-gray-400 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-800">Address Information</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  House Number
-                </label>
-                <input
-                  type="text"
-                  name="house_number"
-                  value={formData.house_number}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="House No."
-                />
+          {/* Factory-specific Information */}
+          {formData.role === 'factory' && (
+            <div className="border-t pt-6">
+              <div className="flex items-center mb-4">
+                <Building2 size={20} className="text-gray-400 mr-2" />
+                <h3 className="text-lg font-semibold text-gray-800">Company Information</h3>
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="company_name"
+                    value={formData.company_name}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter company name"
+                    required={formData.role === 'factory'}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Street
-                </label>
-                <input
-                  type="text"
-                  name="street"
-                  value={formData.street}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Street name"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Registration Number *
+                  </label>
+                  <input
+                    type="text"
+                    name="registration_number"
+                    value={formData.registration_number}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Business registration number"
+                    required={formData.role === 'factory'}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Area
-                </label>
-                <input
-                  type="text"
-                  name="area"
-                  value={formData.area}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Area/Locality"
-                />
-              </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Business Address *
+                  </label>
+                  <textarea
+                    name="business_address"
+                    value={formData.business_address}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter complete business address"
+                    required={formData.role === 'factory'}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  City
-                </label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="City"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Postal Code
-                </label>
-                <input
-                  type="text"
-                  name="postal_code"
-                  value={formData.postal_code}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Postal Code"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Address
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter your complete address"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Contact Person *
+                  </label>
+                  <input
+                    type="text"
+                    name="contact_person"
+                    value={formData.contact_person}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Primary contact person"
+                    required={formData.role === 'factory'}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Address Information (for residents) */}
+          {formData.role === 'resident' && (
+            <div className="border-t pt-6">
+              <div className="flex items-center mb-4">
+                <Home size={20} className="text-gray-400 mr-2" />
+                <h3 className="text-lg font-semibold text-gray-800">Address Information</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    House Number
+                  </label>
+                  <input
+                    type="text"
+                    name="house_number"
+                    value={formData.house_number}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="House No."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Street
+                  </label>
+                  <input
+                    type="text"
+                    name="street"
+                    value={formData.street}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Street name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Area
+                  </label>
+                  <input
+                    type="text"
+                    name="area"
+                    value={formData.area}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Area/Locality"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="City"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Postal Code
+                  </label>
+                  <input
+                    type="text"
+                    name="postal_code"
+                    value={formData.postal_code}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Postal Code"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Address
+                  </label>
+                  <textarea
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter your complete address"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Password */}
           <div className="border-t pt-6">

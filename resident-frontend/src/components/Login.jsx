@@ -1,6 +1,6 @@
 // src/components/Login.jsx
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 
@@ -13,6 +13,9 @@ const Login = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +25,22 @@ const Login = () => {
     const result = await login(email, password);
     
     if (result.success) {
-      navigate('/');
+      // Redirect based on user role
+      let redirectPath = '/';
+      switch (result.userData.role) {
+        case 'factory':
+          redirectPath = '/factory';
+          break;
+        case 'admin':
+          redirectPath = '/admin'; // You can create an admin dashboard later
+          break;
+        case 'driver':
+          redirectPath = '/driver'; // You can create a driver dashboard later
+          break;
+        default:
+          redirectPath = from;
+      }
+      navigate(redirectPath, { replace: true });
     } else {
       setError(result.message);
     }
@@ -44,6 +62,12 @@ const Login = () => {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
             {error}
+          </div>
+        )}
+
+        {location.state?.message && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+            {location.state.message}
           </div>
         )}
 
@@ -101,6 +125,24 @@ const Login = () => {
               Sign up
             </Link>
           </p>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <p className="text-center text-sm text-gray-600">
+            Demo Accounts:
+          </p>
+          <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+            <div className="text-center">
+              <p className="font-medium">Resident</p>
+              <p>resident@example.com</p>
+              <p>password: 123456</p>
+            </div>
+            <div className="text-center">
+              <p className="font-medium">Factory</p>
+              <p>factory@example.com</p>
+              <p>password: 123456</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
