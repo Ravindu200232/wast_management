@@ -1,3 +1,4 @@
+// models/ExtraPickup.js
 import mongoose from "mongoose";
 
 const extraPickupSchema = new mongoose.Schema({
@@ -44,13 +45,38 @@ const extraPickupSchema = new mongoose.Schema({
   },
   assigned_team_id: {
     type: String,
-    ref: 'CollectionTeam'
+    ref: 'User',
+    required: false
+  },
+  driver_id: {
+    type: String,
+    ref: 'User',
+    required: false
   },
   notes: {
     type: String
+  },
+  request_date: {
+    type: Date,
+    default: Date.now
+  },
+  assigned_date: {
+    type: Date
+  },
+  completed_date: {
+    type: Date
+  },
+  current_location_lat: {
+    type: Number
+  },
+  current_location_lng: {
+    type: Number
+  },
+  location_updated_at: {
+    type: Date
   }
 }, {
-  timestamps: { createdAt: 'request_date' }
+  timestamps: { createdAt: 'request_date', updatedAt: 'updated_at' }
 });
 
 const ExtraPickup = mongoose.model('ExtraPickup', extraPickupSchema);
