@@ -8,9 +8,8 @@ const couponSchema = new mongoose.Schema({
     default: () => new mongoose.Types.ObjectId().toString()
   },
   resident_id: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     required: true,
-    ref: 'User'
   },
   coupon_code: {
     type: String,

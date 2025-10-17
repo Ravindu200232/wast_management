@@ -25,6 +25,7 @@ export const getAllCoupons = async (req, res) => {
 // Get resident's coupons
 export const getMyCoupons = async (req, res) => {
   try {
+    console.log(req.user.role,"hi")
     if (req.user.role !== 'resident') {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -37,8 +38,10 @@ export const getMyCoupons = async (req, res) => {
     console.log(resident,"hi")
 
     const coupons = await Coupon.find({ 
-      resident_id: resident._id
+      resident_id: resident.user_id
     }).sort({ issue_date: -1 });
+
+    console.log(coupons,"hi")
 
     
 
@@ -59,7 +62,7 @@ export const issueCoupon = async (req, res) => {
     const Residents = await Resident.findOne({user_id : resident_id})
     const residentid = Residents.user_id;
     const user = await User.findOne({user_id : residentid})
-    const userId = user._id;
+    const userId = user.user_id;
     console.log(residentid)
     // Generate unique coupon code
     const coupon_code = `CPN${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
