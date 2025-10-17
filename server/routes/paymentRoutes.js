@@ -1,9 +1,17 @@
-import express from "express";
-import { processPayment, getPaymentDetails } from "../controllers/paymentController.js";
+import express from 'express';
+import {
+  processPayment,
+  getPaymentDetails,
+  getPaymentHistory,
+  getAllPayments
+} from '../controllers/paymentController.js';
 
-const paymentRouter = express.Router();
+const router = express.Router();
 
-paymentRouter.post("/", processPayment);
-paymentRouter.get("/:orderId", getPaymentDetails);
+// Payment routes - no validation required
+router.post('/process', processPayment);
+router.get('/history/:factory_id', getPaymentHistory);
+router.get('/all', getAllPayments); // Get all payments
+router.get('/:paymentId', getPaymentDetails);
 
-export default paymentRouter;
+export default router;

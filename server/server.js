@@ -23,6 +23,7 @@ import routeRoutes from "./routes/routeRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 
 
+
 dotenv.config();
 
 const app = express();
@@ -70,7 +71,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/routes", routeRoutes);
 app.use("/api/analytics", analyticsRoutes);
-
+app.use("/api/admin/schedules", scheduleRoutes);
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
 });

@@ -37,6 +37,11 @@ const collectionScheduleSchema = new mongoose.Schema({
     type: String,
     ref: 'User'
   },
+  resident_ids: {
+    type: [String], // Array of resident IDs
+    ref: 'Resident',
+    default: []
+  },
   status: {
     type: String,
     enum: ['scheduled', 'in_progress', 'completed', 'cancelled'],

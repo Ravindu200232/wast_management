@@ -4,17 +4,14 @@ const paymentSchema = new mongoose.Schema({
   payment_id: {
     type: String,
     required: true,
-    unique: true,
-    default: () => mongoose.Types.ObjectId().toString()
+    unique: true
   },
   order_id: {
     type: String,
-    ref: 'Order',
     required: true
   },
   factory_id: {
     type: String,
-    ref: 'RecyclingFactory',
     required: true
   },
   amount: {
@@ -39,11 +36,14 @@ const paymentSchema = new mongoose.Schema({
     default: 'pending'
   },
   gateway_response: {
-    type: Object
+    type: mongoose.Schema.Types.Mixed
   }
 }, {
-  timestamps: { createdAt: 'payment_date' }
+  timestamps: { 
+    createdAt: 'payment_date',
+    updatedAt: 'updated_at'
+  }
 });
 
-const  Payment= mongoose.model('Payment', paymentSchema);
-export default Payment
+const Payment = mongoose.model('Payment', paymentSchema);
+export default Payment;

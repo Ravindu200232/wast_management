@@ -1,18 +1,29 @@
 import express from "express";
-import { 
-  getSchedules, 
-  createSchedule, 
-  updateSchedule, 
-  getResidentSchedules,
-  getDriverSchedules 
-} from "../controllers/collectionScheduleController.js";
+import {
+  createSchedule,
+  getAllSchedules,
+  updateSchedule,
+  deleteSchedule,
+  getAvailableDrivers,
+  getAvailableVehicles,
+  getAllResidents,
+  getDriverSchedules,
+  updateScheduleStatus
+} from "../controllers/scheduleController.js";
 
 const scheduleRouter = express.Router();
 
-scheduleRouter.get("/", getResidentSchedules); // For residents to view their schedules
-scheduleRouter.get("/driver", getDriverSchedules); // For drivers to view their schedules
-scheduleRouter.get("/all", getSchedules); // For admin to view all schedules
+// Admin routes
 scheduleRouter.post("/", createSchedule);
+scheduleRouter.get("/", getAllSchedules);
 scheduleRouter.put("/:id", updateSchedule);
+scheduleRouter.delete("/:id", deleteSchedule);
+scheduleRouter.get("/drivers", getAvailableDrivers);
+scheduleRouter.get("/vehicles", getAvailableVehicles);
+scheduleRouter.get("/residents", getAllResidents);
+
+// Driver routes
+scheduleRouter.get("/driver", getDriverSchedules);
+scheduleRouter.put("/:id/status", updateScheduleStatus);
 
 export default scheduleRouter;
